@@ -1,37 +1,21 @@
 import streamlit as st
 import joblib
 import numpy as np
-import os
 
-MODEL_PATH = "linear_regression_jewellery_model.pkl"
+@st.cache_resource
+def load_model():
+    return joblib.load("linear_regression_jewellery_model.pkl")
+
+model = load_model()
 
 st.title("Gold Jewellery Price Estimator (India 🇮🇳)")
-st.write("Enter jewellery details to estimate price")
 
-if not os.path.exists(MODEL_PATH):
-    st.error("Model file not found. Please add linear_regression_jewellery_model.pkl")
-else:
-    model = joblib.load(MODEL_PATH)
+gold_rate = st.number_input("Gold Rate (₹/g)", min_value=1000.0)
+weight = st.number_input("Weight (g)", min_value=0.1)
+making_pct = st.number_input("Making (%)", min_value=0.0)
+wastage_pct = st.number_input("Wastage (%)", min_value=0.0)
 
-    gold_rate = st.number_input(
-        "Gold Rate (₹ per gram, 22K)",
-        min_value=1000.0,
-        step=10.0
-    )
-
-    weight = st.number_input(
-        "Weight (grams)",
-        min_value=0.1,
-        step=0.1
-    )
-
-    making_charge = st.number_input(
-        "Making Charges (%)",
-        min_value=0.0,
-        step=0.5
-    )
-
-    if st.button("Estimate Price"):
-        features = np.array([[gold_rate, weight, making_charge]])
-        prediction = model.predict(features)[0]
-        st.success(f"Estimated Jewellery Price: ₹{prediction:,.2f}")
+if st.button("Estimate Price"):
+    X = np.array([[gold_rate, weight, making_pct, wastage_pct]])
+    price = model.predict(X)[0]
+    st.success(f"Estimated Price: ₹{price:,.2f}")
